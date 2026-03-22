@@ -1,4 +1,29 @@
-export default function HomePage() {
+const FALLBACK_TITLE = "Planner Flow";
+
+async function getTitle(): Promise<string> {
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  try {
+    const res = await fetch(`${apiBase}/get-title`, { cache: "no-store" });
+    if (!res.ok) return FALLBACK_TITLE;
+    const data: unknown = await res.json();
+    if (
+      data !== null &&
+      typeof data === "object" &&
+      "title" in data &&
+      typeof (data as { title: unknown }).title === "string"
+    ) {
+      return (data as { title: string }).title;
+    }
+    return FALLBACK_TITLE;
+  } catch {
+    return FALLBACK_TITLE;
+  }
+}
+
+export default async function HomePage() {
+  const title = await getTitle();
+
   return (
     <main
       style={{
@@ -8,7 +33,7 @@ export default function HomePage() {
         padding: "2rem",
       }}
     >
-      <h1>Next.js + TypeScript + App Router is ready.</h1>
+      <h1>{title}</h1>
     </main>
   );
 }
