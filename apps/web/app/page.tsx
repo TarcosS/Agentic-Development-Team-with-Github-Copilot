@@ -1,4 +1,19 @@
-export default function HomePage() {
+async function getTitle(): Promise<string> {
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  try {
+    const res = await fetch(`${apiBase}/get-title`, { cache: "no-store" });
+    if (!res.ok) {
+      return "Planner Flow";
+    }
+    return (await res.text()).trim();
+  } catch {
+    return "Planner Flow";
+  }
+}
+
+export default async function HomePage() {
+  const title = await getTitle();
   return (
     <main
       style={{
@@ -8,7 +23,7 @@ export default function HomePage() {
         padding: "2rem",
       }}
     >
-      <h1>Next.js + TypeScript + App Router is ready.</h1>
+      <h1>{title}</h1>
     </main>
   );
 }
