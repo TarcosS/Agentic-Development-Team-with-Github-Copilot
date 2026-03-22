@@ -3,8 +3,15 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "dev": "node index.js",
+        "dev": "nodemon index.js",
         "build": "node -e \"console.log('api build done')\"",
         "start": "node index.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^5.2.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.14"
     }
 }
