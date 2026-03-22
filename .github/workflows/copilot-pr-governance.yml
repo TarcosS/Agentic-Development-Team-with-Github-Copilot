@@ -19,7 +19,6 @@ jobs:
     request-copilot-review:
         if: >-
             github.event_name == 'pull_request' &&
-            github.event.pull_request.draft == false &&
             startsWith(github.event.pull_request.head.ref, 'copilot/') &&
             startsWith(github.event.pull_request.base.ref, 'feat/')
         runs-on: ubuntu-latest
@@ -30,6 +29,25 @@ jobs:
                   script: |
                       const pr = context.payload.pull_request;
                       const marker = "<!-- copilot-governance:review-request -->";
+                      const comments = await github.paginate(
+                        github.rest.issues.listComments,
+                        {
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr.number,
+                          per_page: 100,
+                        }
+                      );
+
+                      const alreadyRequested = comments.some((c) =>
+                        typeof c.body === "string" && c.body.includes(marker)
+                      );
+
+                      if (alreadyRequested) {
+                        core.info("Copilot review request marker already exists; skipping duplicate comment.");
+                        return;
+                      }
+
                       const body = `${marker}\n/copilot review`;
                       await github.rest.issues.createComment({
                         owner: context.repo.owner,
