@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "continual-learning": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "computedHash": "1f7c1a79d6ee166aac48591acbc9165778d2384fa9e84405099750b6e065c0c7"
+    },
+    "copilot-sdk": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "computedHash": "aa06b65b8b191c128872561413910cc92d9ab292418a0e451bc61b1579c29b57"
+    },
+    "frontend-ui-dark-ts": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "computedHash": "1b892ece7247b97fa6faa35754b30eedec11eb9dde83b8b39783f7fdb6afc38d"
+    },
+    "github-issue-creator": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "computedHash": "1d19ed1e52436c28746d35f53113050d09b79c090a8bd3a6148b4570a3531374"
+    },
+    "react-flow-node-ts": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "computedHash": "33102fbcf0b8b9c6b763c66dcec480fcce29303d4bcde3f086931d8d7bb43b82"
+    },
+    "zustand-store-ts": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "computedHash": "23efa786ff9b32547557ac75de5084fd9e2a066a01a1fe1860dc80ac7a15e7b1"
+    }
+  }
+}
