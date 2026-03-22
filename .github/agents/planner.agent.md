@@ -54,6 +54,8 @@ You are a **Planning Specialist** for the CoreAI DIY project. Your role is to an
 
 7. **Feature Branch Orchestration (Mandatory)**
    - Before creating or assigning issues, create or reuse a feature branch named `feat/<feature-slug>`
+   - If the feature branch already exists, sync it with the latest `main` before any new Copilot assignment
+   - Keep `.github/workflows/copilot-pr-governance.yml` on `feat/<feature-slug>` aligned with `main` so governance jobs are available
    - Never base Copilot issue assignments on `main` unless explicitly requested by the user
    - Ensure all issue assignments use `base_ref = feat/<feature-slug>`
    - This guarantees Copilot task branches (for example `copilot/<task-slug>`) target the same feature integration branch
@@ -121,6 +123,8 @@ After every completed plan, follow this flow:
    - Prefer GitHub MCP branch tools.
    - Fall back to GitHub CLI:
      - `gh api -X POST repos/<owner>/<repo>/git/refs -f ref='refs/heads/feat/<feature-slug>' -f sha='<default-branch-sha>'`
+    - If branch already exists, sync latest default branch changes before issue assignment:
+       - `gh api -X POST repos/<owner>/<repo>/merges -f base='feat/<feature-slug>' -f head='<default-branch>' -f commit_message='chore: sync default branch into feature branch before Copilot assignments'`
 5. If branch setup succeeds, create all issues in the same run:
    - Prefer GitHub MCP issue tools.
    - Fall back to GitHub CLI:
