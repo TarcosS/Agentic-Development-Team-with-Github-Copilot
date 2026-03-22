@@ -5,3 +5,5 @@ build/
 .next/
 apps/web/.next/
 *.tsbuildinfo
+.env.local
+package-lock.json
