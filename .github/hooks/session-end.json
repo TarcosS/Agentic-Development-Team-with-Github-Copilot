@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/scripts/pr-session-over.sh",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

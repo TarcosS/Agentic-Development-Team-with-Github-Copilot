@@ -1,0 +1,105 @@
+name: On Session Over
+
+# "session-over" label'ı eklendiğinde tetiklenir.
+# 1. PR'ı draft'tan ready for review'a çevirir.
+# 2. Copilot'u reviewer olarak atar.
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: on-session-over-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  promote-and-request-review:
+    if: >-
+      github.event.label.name == 'session-over' &&
+      startsWith(github.event.pull_request.head.ref, 'copilot/') &&
+      startsWith(github.event.pull_request.base.ref, 'feat/')
+    runs-on: ubuntu-latest
+    steps:
+      # ── 1. Draft → Ready for Review ──────────────────────────────────────
+      - name: Mark PR ready for review (GraphQL)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            if (!pr.draft) {
+              core.info(`PR #${pr.number} is already ready for review. Skipping.`);
+              return;
+            }
+
+            const mutation = `
+              mutation markReady($id: ID!) {
+                markPullRequestReadyForReview(input: { pullRequestId: $id }) {
+                  pullRequest { number isDraft }
+                }
+              }
+            `;
+
+            const result = await github.graphql(mutation, { id: pr.node_id });
+            const updated = result?.markPullRequestReadyForReview?.pullRequest;
+
+            if (updated && !updated.isDraft) {
+              core.info(`PR #${updated.number} is now ready for review.`);
+            } else {
+              core.setFailed(`PR #${pr.number} could not be converted to ready for review.`);
+            }
+
+      # ── 2. Copilot'u Reviewer Olarak Ata ─────────────────────────────────
+      - name: Request Copilot review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Mevcut review request'leri kontrol et — idempotency
+            const { data: reviewers } = await github.rest.pulls.listRequestedReviewers({
+              owner, repo, pull_number: pr.number,
+            });
+
+            const alreadyRequested = reviewers.users?.some(
+              u => u.login === "copilot-pull-request-reviewer"
+            );
+
+            if (alreadyRequested) {
+              core.info("Copilot is already a requested reviewer. Skipping.");
+              return;
+            }
+
+            await github.rest.pulls.requestReviewers({
+              owner,
+              repo,
+              pull_number: pr.number,
+              reviewers: ["copilot-pull-request-reviewer"],
+            });
+
+            core.info(`Copilot review requested on PR #${pr.number}.`);
+
+      # ── 3. "session-over" Label'ını Temizle ──────────────────────────────
+      # Döngüde tekrar tetiklenmemesi için label'ı kaldır.
+      - name: Remove session-over label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                name: "session-over",
+              });
+              core.info("Removed 'session-over' label.");
+            } catch (err) {
+              // Label zaten yoksa 404 gelir — problem değil
+              if (err.status !== 404) throw err;
+            }

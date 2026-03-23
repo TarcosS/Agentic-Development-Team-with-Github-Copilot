@@ -1,0 +1,137 @@
+name: On Copilot Review
+
+# Copilot'un review submit etmesiyle tetiklenir.
+# - changes_requested → PR'a "@copilot - <feedback>" yorumu ekler, Copilot'u yönlendirir.
+# - approved / commented (actionable yorum yok) → auto-merge etkinleştirir.
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: on-copilot-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  # ── Ortak filtre: sadece Copilot'un review'u, sadece copilot/ → feat/ ────
+  handle-review:
+    if: >-
+      github.event.review.user.login == 'copilot-pull-request-reviewer' &&
+      startsWith(github.event.pull_request.head.ref, 'copilot/') &&
+      startsWith(github.event.pull_request.base.ref, 'feat/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate review and act
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr      = context.payload.pull_request;
+            const review  = context.payload.review;
+            const owner   = context.repo.owner;
+            const repo    = context.repo.repo;
+            const state   = review.state;   // 'approved' | 'changes_requested' | 'commented'
+
+            core.info(`Review state: ${state}`);
+
+            // ── A. CHANGES REQUESTED ──────────────────────────────────────
+            if (state === "changes_requested") {
+              const feedback = (review.body || "").trim() || "(no review body provided)";
+
+              // İnline review yorumlarını da topla
+              const inlineComments = await github.paginate(
+                github.rest.pulls.listReviewComments,
+                { owner, repo, pull_number: pr.number, per_page: 100 }
+              );
+
+              const thisReviewComments = inlineComments
+                .filter(c => c.pull_request_review_id === review.id)
+                .map(c => `- \`${c.path}\` (line ${c.original_line ?? c.line ?? "?"}): ${c.body}`)
+                .join("\n");
+
+              const commentBody = [
+                "<!-- copilot-governance:changes-requested -->",
+                `@copilot - please address the following review feedback and push updates to this PR:`,
+                "",
+                feedback,
+                thisReviewComments ? `\n**Inline comments:**\n${thisReviewComments}` : "",
+              ].filter(Boolean).join("\n");
+
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: pr.number,
+                body: commentBody,
+              });
+
+              core.info(`Posted @copilot feedback comment on PR #${pr.number}.`);
+              return;
+            }
+
+            // ── B. COMMENTED — inline actionable yorum var mı? ───────────
+            if (state === "commented") {
+              const inlineComments = await github.paginate(
+                github.rest.pulls.listReviewComments,
+                { owner, repo, pull_number: pr.number, per_page: 100 }
+              );
+
+              const actionable = inlineComments.filter(
+                c => c.pull_request_review_id === review.id
+              );
+
+              if (actionable.length > 0) {
+                const lines = actionable
+                  .map(c => `- \`${c.path}\` (line ${c.original_line ?? c.line ?? "?"}): ${c.body}`)
+                  .join("\n");
+
+                const commentBody = [
+                  "<!-- copilot-governance:commented-review -->",
+                  `@copilot - review produced ${actionable.length} inline comment(s). Please address them and push updates:`,
+                  "",
+                  lines,
+                ].join("\n");
+
+                await github.rest.issues.createComment({
+                  owner, repo,
+                  issue_number: pr.number,
+                  body: commentBody,
+                });
+
+                core.info(`Posted ${actionable.length} inline comment(s) to Copilot on PR #${pr.number}.`);
+                return;
+              }
+
+              // Actionable yorum yoksa approved gibi davran — auto-merge'e düş
+              core.info("No actionable inline comments. Proceeding to auto-merge.");
+            }
+
+            // ── C. APPROVED (veya actionable yorumsuz commented) ─────────
+            // GraphQL ile auto-merge etkinleştir
+            const mutation = `
+              mutation enableAutoMerge($id: ID!) {
+                enablePullRequestAutoMerge(input: {
+                  pullRequestId: $id,
+                  mergeMethod: SQUASH
+                }) {
+                  pullRequest { number autoMergeRequest { mergeMethod } }
+                }
+              }
+            `;
+
+            try {
+              const result = await github.graphql(mutation, { id: pr.node_id });
+              const updated = result?.enablePullRequestAutoMerge?.pullRequest;
+              if (updated?.autoMergeRequest) {
+                core.info(`Auto-merge (SQUASH) enabled on PR #${updated.number}.`);
+              } else {
+                core.warning("Auto-merge mutation ran but result is unexpected. Check branch protection rules.");
+              }
+            } catch (err) {
+              if (/already enabled|already merged/i.test(err.message || "")) {
+                core.info("Auto-merge already active or PR already merged.");
+              } else {
+                core.setFailed(`Failed to enable auto-merge on PR #${pr.number}: ${err.message}`);
+              }
+            }
