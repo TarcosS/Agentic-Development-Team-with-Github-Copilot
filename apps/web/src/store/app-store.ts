@@ -18,22 +18,22 @@ const initialState: AppState = {
 // ============================================================================
 
 /**
- * useAppStore – Zustand store for managing global application state.
+ * useStore – Zustand store for managing global application state.
  *
  * @example
  * ```typescript
  * // In a client component – use narrow selectors for performance
- * const title = useAppStore((state) => state.title);
- * const increment = useAppStore((state) => state.increment);
+ * const title = useStore((state) => state.title);
+ * const increment = useStore((state) => state.increment);
  *
  * // Subscribe to changes outside React
- * useAppStore.subscribe(
+ * useStore.subscribe(
  *   (state) => state.count,
  *   (count) => console.log('Count changed:', count)
  * );
  * ```
  */
-export const useAppStore = create<AppStore>()(
+export const useStore = create<AppStore>()(
   subscribeWithSelector((set, get) => ({
     // ── Initial state ──────────────────────────────────────────────────────
     ...initialState,

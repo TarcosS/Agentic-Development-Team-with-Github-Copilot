@@ -1,14 +1,14 @@
 'use client';
 
-import { useAppStore } from '@/src/store';
+import { useStore } from '@/src/store';
 
 export default function HomePage() {
   // Narrow selectors – each one only re-renders when its slice changes.
-  const title = useAppStore((state) => state.title);
-  const count = useAppStore((state) => state.count);
-  const increment = useAppStore((state) => state.increment);
-  const decrement = useAppStore((state) => state.decrement);
-  const reset = useAppStore((state) => state.reset);
+  const title = useStore((state) => state.title);
+  const count = useStore((state) => state.count);
+  const increment = useStore((state) => state.increment);
+  const decrement = useStore((state) => state.decrement);
+  const reset = useStore((state) => state.reset);
 
   return (
     <main

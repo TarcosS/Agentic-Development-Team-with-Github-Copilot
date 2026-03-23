@@ -3,8 +3,8 @@
  *
  * @example
  * ```typescript
- * import { useAppStore } from '@/src/store';
+ * import { useStore } from '@/src/store';
  * ```
  */
-export { useAppStore } from './app-store';
+export { useStore } from './app-store';
 export type { AppState, AppActions, AppStore } from './types';
