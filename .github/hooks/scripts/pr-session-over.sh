@@ -29,11 +29,38 @@ PR_NUMBER=$(gh pr list \
   --json number \
   --jq '.[0].number' 2>/dev/null || echo "")
 
+# Some sessionEnd runs happen while local branch is "main".
+# Fallback to PR number from hook payload when available.
 if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
-  echo "[hook:sessionEnd] No open PR found for branch '$BRANCH'. Exiting." >&2
+  INPUT_PR_NUMBER=""
+  if command -v jq >/dev/null 2>&1; then
+    INPUT_PR_NUMBER=$(printf '%s' "$INPUT" | jq -r '
+      .pullRequest.number //
+      .pull_request.number //
+      .pullRequestNumber //
+      .pull_request_number //
+      empty
+    ' 2>/dev/null || true)
+  fi
+
+  if [[ "$INPUT_PR_NUMBER" =~ ^[0-9]+$ ]]; then
+    PR_NUMBER="$INPUT_PR_NUMBER"
+    echo "[hook:sessionEnd] Using PR #${PR_NUMBER} from hook input payload." >&2
+  fi
+fi
+
+if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+  echo "[hook:sessionEnd] No open PR found by branch/input. Exiting." >&2
   exit 0
 fi
-echo "[hook:sessionEnd] PR #${PR_NUMBER} found." >&2
+echo "[hook:sessionEnd] PR #${PR_NUMBER} selected." >&2
+
+# Safety: only label PRs created by Copilot.
+PR_AUTHOR_LOGIN=$(gh pr view "$PR_NUMBER" --json author --jq '.author.login' 2>/dev/null || echo "")
+if [ "$PR_AUTHOR_LOGIN" != "app/copilot-swe-agent" ]; then
+  echo "[hook:sessionEnd] PR #${PR_NUMBER} author is '$PR_AUTHOR_LOGIN' (not Copilot). Exiting." >&2
+  exit 0
+fi
 
 # ── "session-over" label'ını ekle ────────────────────────────────────────────
 # Label repo'da yoksa önce oluştur (ilk çalıştırmada gerekli).
