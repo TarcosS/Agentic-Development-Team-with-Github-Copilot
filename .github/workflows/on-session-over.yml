@@ -27,6 +27,7 @@ jobs:
       - name: Mark PR ready for review (REST)
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.COPILOT_PAT }}
           script: |
             const pr = context.payload.pull_request;
             const owner = context.repo.owner;
