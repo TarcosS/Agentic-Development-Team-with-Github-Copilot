@@ -34,12 +34,21 @@ jobs:
               with:
                   script: |
                       const pr = context.payload.pull_request;
-                      await github.rest.pulls.update({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        pull_number: pr.number,
-                        draft: false
-                      });
+                      if (!pr.draft) {
+                        core.info(`PR #${pr.number} is already ready for review.`);
+                        return;
+                      }
+
+                      try {
+                        await github.request("POST /repos/{owner}/{repo}/pulls/{pull_number}/ready_for_review", {
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          pull_number: pr.number
+                        });
+                        core.info(`PR #${pr.number} converted from draft to ready for review.`);
+                      } catch (error) {
+                        core.setFailed(`Failed to convert PR #${pr.number} to ready for review: ${error.message}`);
+                      }
 
     request-copilot-review:
         if: >-
