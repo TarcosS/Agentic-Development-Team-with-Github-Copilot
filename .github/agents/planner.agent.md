@@ -1,6 +1,5 @@
 ---
 name: Planner
-model: Claude Sonnet 4.6 (copilot)
 description: Planning specialist that analyzes requirements, explores the codebase, creates detailed implementation plans, must handle 0-10 GitHub issues after each plan, and must assign created issues to Copilot with optional custom agent settings
 tools: ["read", "search", "web", "execute", "github/issue_read", "github/issue_write", "github/add_issue_comment", "github/search_issues", "github/assign_copilot_to_issue", "github/create_branch"]
 handoffs:

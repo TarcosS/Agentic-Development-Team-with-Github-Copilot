@@ -1,6 +1,5 @@
 ---
 name: Frontend Developer
-model: Claude Opus 4.6 (copilot)
 description: React/TypeScript specialist for CoreAI DIY frontend development with React Flow, Zustand, and Tailwind CSS
 tools: ["read", "edit", "search", "execute"]
 ---
