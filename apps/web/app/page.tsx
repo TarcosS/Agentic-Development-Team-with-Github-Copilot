@@ -1,14 +1,37 @@
+'use client';
+
+import { useAppStore } from '@/src/store';
+
 export default function HomePage() {
+  // Narrow selectors – each one only re-renders when its slice changes.
+  const title = useAppStore((state) => state.title);
+  const count = useAppStore((state) => state.count);
+  const increment = useAppStore((state) => state.increment);
+  const decrement = useAppStore((state) => state.decrement);
+  const reset = useAppStore((state) => state.reset);
+
   return (
     <main
       style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: "2rem",
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        padding: '2rem',
       }}
     >
-      <h1>Next.js + TypeScript + App Router is ready.</h1>
+      <div style={{ textAlign: 'center', fontFamily: 'inherit' }}>
+        <h1>{title}</h1>
+
+        <p style={{ fontSize: '1.25rem', margin: '1rem 0' }}>
+          Counter: <strong>{count}</strong>
+        </p>
+
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+          <button onClick={decrement}>−</button>
+          <button onClick={increment}>+</button>
+          <button onClick={reset}>Reset</button>
+        </div>
+      </div>
     </main>
   );
 }
