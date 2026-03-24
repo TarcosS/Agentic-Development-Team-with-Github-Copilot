@@ -20,7 +20,7 @@ jobs:
   # ── Ortak filtre: sadece Copilot'un review'u, sadece copilot/ → feat/ ────
   handle-review:
     if: >-
-      github.event.review.user.login == 'copilot-pull-request-reviewer' &&
+      (github.event.review.user.login == 'copilot-pull-request-reviewer' || github.event.review.user.login == 'copilot-pull-request-reviewer[bot]') &&
       startsWith(github.event.pull_request.head.ref, 'copilot/') &&
       startsWith(github.event.pull_request.base.ref, 'feat/')
     runs-on: ubuntu-latest
