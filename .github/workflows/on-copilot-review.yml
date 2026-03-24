@@ -6,6 +6,10 @@ name: On Copilot Review
 on:
   pull_request_review:
     types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
@@ -17,6 +21,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump event
+        run: |
+          echo "event_name=${{ github.event_name }}"
+          echo "actor=${{ github.actor }}"
+          echo '${{ toJson(github.event) }}'
   # ── Ortak filtre: sadece Copilot'un review'u, sadece copilot/ → feat/ ────
   handle-review:
     if: >-
