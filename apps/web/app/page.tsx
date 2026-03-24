@@ -9,6 +9,9 @@ export default function HomePage() {
       }}
     >
       <h1>Next.js + TypeScript + App Router is ready.</h1>
+      <h2 style={{ marginTop: "0.5rem", fontWeight: 400, fontSize: "1.25rem" }}>
+        Welcome to the Agentic Development Team starter.
+      </h2>
     </main>
   );
 }
