@@ -9,6 +9,7 @@ export default function HomePage() {
       }}
     >
       <h1>Next.js + TypeScript + App Router is ready.</h1>
+      <h2>Welcome to the Agentic Development Team</h2>
     </main>
   );
 }
