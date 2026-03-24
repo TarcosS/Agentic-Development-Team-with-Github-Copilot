@@ -31,6 +31,7 @@ jobs:
           echo "review_user=${{ github.event.review.user.login }}"
           echo "head_ref=${{ github.event.pull_request.head.ref }}"
           echo "base_ref=${{ github.event.pull_request.base.ref }}"
+          echo "review_state=${{ github.event.review.state }}"
   # ── Ortak filtre: sadece Copilot'un review'u, sadece copilot/ → feat/ ────
   handle-review:
     if: >-
