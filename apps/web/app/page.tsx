@@ -8,7 +8,12 @@ export default function HomePage() {
         padding: "2rem",
       }}
     >
-      <h1>Next.js + TypeScript + App Router is ready.</h1>
+      <div style={{ textAlign: "center" }}>
+        <h1>Next.js + TypeScript + App Router is ready.</h1>
+        <p style={{ marginTop: "0.75rem", color: "#6b7280" }}>
+          Welcome! This is the starting point of your application.
+        </p>
+      </div>
     </main>
   );
 }
