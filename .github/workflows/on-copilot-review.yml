@@ -28,7 +28,9 @@ jobs:
         run: |
           echo "event_name=${{ github.event_name }}"
           echo "actor=${{ github.actor }}"
-          echo '${{ toJson(github.event) }}'
+          echo "review_user=${{ github.event.review.user.login }}"
+          echo "head_ref=${{ github.event.pull_request.head.ref }}"
+          echo "base_ref=${{ github.event.pull_request.base.ref }}"
   # ── Ortak filtre: sadece Copilot'un review'u, sadece copilot/ → feat/ ────
   handle-review:
     if: >-
